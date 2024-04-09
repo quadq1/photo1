@@ -1,0 +1,188 @@
+using Microsoft.VisualBasic;
+using System.Collections;
+using System.Diagnostics.Contracts;
+using Telegram.Bot;
+using Telegram.Bot.Exceptions;
+using Telegram.Bot.Polling;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
+
+internal class Program
+{
+    private static void Main(string[] args)
+    {
+        Start();
+        Console.ReadLine();
+    }
+    private static async void Start()
+    {
+        var botClient = new TelegramBotClient("6850770267:AAGpj1_lJqBha3bOv5mN178GqLSCEM6ss7k");
+
+        using CancellationTokenSource cts = new();
+
+        // StartReceiving does not block the caller thread. Receiving is done on the ThreadPool.
+        ReceiverOptions receiverOptions = new()
+        {
+            AllowedUpdates = Array.Empty<UpdateType>() // receive all update types except ChatMember related updates
+        };
+
+        botClient.StartReceiving(
+            updateHandler: HandleUpdateAsync,
+            pollingErrorHandler: HandlePollingErrorAsync,
+            receiverOptions: receiverOptions,
+            cancellationToken: cts.Token
+        );
+        var me = await botClient.GetMeAsync();
+
+        Console.WriteLine($"Start listening for @{me.Username}");
+        Console.ReadLine();
+
+        // Send cancellation request to stop bot
+        cts.Cancel();
+    }
+    private static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+    {
+        // Only process Message updates: https://core.telegram.org/bots/api#message
+        if (update.Message is not { } message)
+            return;
+        // Only process text messages
+        if (message.Text is not { } messageText)
+            return;
+        if (message.Text == "/start")
+        {
+            await CreateKeyBoard(botClient, update, cancellationToken);
+        }
+        var chatId = message.Chat.Id;
+        if (message.Text == "Песики🐶")
+        {
+           
+            await botClient.SendPhotoAsync(
+            chatId: chatId,
+            photo: InputFile.FromUri("https://raw.githubusercontent.com/quadq1/photo1/main/Псина1.jpg"),
+            caption: "Плюшевая рядом с елкой",
+            parseMode: ParseMode.Html,
+            cancellationToken: cancellationToken);
+           
+            await botClient.SendPhotoAsync(
+            chatId: chatId,
+            photo: InputFile.FromUri("https://raw.githubusercontent.com/quadq1/photo1/main/Псина2.jpg"),
+            caption: "Беляшь",
+            parseMode: ParseMode.Html,
+            cancellationToken: cancellationToken);
+            
+            await botClient.SendPhotoAsync(
+            chatId: chatId,
+            photo: InputFile.FromUri("https://raw.githubusercontent.com/quadq1/photo1/main/Псина3.jpg"),
+            caption: "Такся",
+            parseMode: ParseMode.Html,
+            cancellationToken: cancellationToken);
+           
+            await botClient.SendPhotoAsync(
+            chatId: chatId,
+            photo: InputFile.FromUri("https://raw.githubusercontent.com/quadq1/photo1/main/Псина4.jpg"),
+            caption: "Шпиц",
+            parseMode: ParseMode.Html,
+            cancellationToken: cancellationToken);
+
+            await botClient.SendPhotoAsync(
+           chatId: chatId,
+           photo: InputFile.FromUri("https://raw.githubusercontent.com/quadq1/photo1/main/photo_5199863227222186096_x%20(1).jpg"),
+           caption: "Корги",
+           parseMode: ParseMode.Html,
+           cancellationToken: cancellationToken);
+
+
+            return;
+        }
+        if (message.Text == "КОНТАКТ")
+        {
+            string conact = "Разработчик : @puciferkq ";
+            Message mess = await botClient.SendTextMessageAsync(
+            chatId: chatId,
+            text: conact,
+            cancellationToken: cancellationToken);
+            return;
+
+
+        }
+        if (message.Text == "Беги🦛")
+        {
+            
+            await botClient.SendPhotoAsync(
+           chatId: chatId,
+           photo: InputFile.FromUri("https://raw.githubusercontent.com/quadq1/photo1/main/Беги1.jpg"),
+           caption: "🦛",
+           parseMode: ParseMode.Html,
+           cancellationToken: cancellationToken);
+            //
+            await botClient.SendPhotoAsync(
+           chatId: chatId,
+           photo: InputFile.FromUri("https://raw.githubusercontent.com/quadq1/photo1/main/Беги2.jpg"),
+           caption: "🦛",
+           parseMode: ParseMode.Html,
+           cancellationToken: cancellationToken);
+            //
+            await botClient.SendPhotoAsync(
+           chatId: chatId,
+           photo: InputFile.FromUri("https://raw.githubusercontent.com/quadq1/photo1/main/Беги3.jpg"),
+           caption: "🦛",
+           parseMode: ParseMode.Html,
+           cancellationToken: cancellationToken);
+            //
+            await botClient.SendPhotoAsync(
+           chatId: chatId,
+           photo: InputFile.FromUri("https://raw.githubusercontent.com/quadq1/photo1/main/Беги4.jpg"),
+           caption: "🦛",
+           parseMode: ParseMode.Html,
+           cancellationToken: cancellationToken);
+
+        }
+        if (message.Text == "Взять песика")
+        {
+            Message ms1 = await botClient.SendVenueAsync(
+                chatId: chatId,
+                latitude: 55.86277352627232f,
+                longitude: 37.6545928272796f,
+                title: "Приют Искра - Муниципальный приют для бездомных животных",
+                address: "ул. Искры, 23А, Москва, 129329",
+                cancellationToken: cancellationToken);
+        }
+    }
+    private static async Task CreateKeyBoard(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+    {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new(new[]
+            {
+                new KeyboardButton[] { "Песики🐶" },
+                new KeyboardButton[] { "Беги🦛" },
+                new KeyboardButton[] { "Взять песика" },
+                new KeyboardButton[] { "КОНТАКТ" }
+            })
+        {
+            ResizeKeyboard = true
+        };
+
+        Message sentMessage = await botClient.SendTextMessageAsync(
+            chatId: update.Message.Chat.Id,
+            text: "Выберите ответ",
+            replyMarkup: replyKeyboardMarkup,
+            cancellationToken: cancellationToken);
+    }
+
+    private static Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
+    {
+        var ErrorMessage = exception switch
+        {
+            ApiRequestException apiRequestException
+                => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
+            _ => exception.ToString()
+        };
+
+        Console.WriteLine(ErrorMessage);
+        return Task.CompletedTask;
+    }
+    //private static async Task SendPhotoAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+    //{
+
+    //}
+}
